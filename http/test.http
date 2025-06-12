@@ -1,0 +1,25 @@
+POST http://localhost:8080/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "user-1234",
+  "customerName": "홍길동",
+  "items": [
+    {"bookId": 101, "quantity": 2},
+    {"bookId": 202, "quantity": 1}
+  ]
+}
+
+### 결제 요청
+POST http://localhost:8080/api/payments/ready
+Content-Type: application/json
+
+{
+  "orderId": "order-2025-06-12-407ef4",
+  "orderName": "도서 결제",
+  "customerName": "홍길동",
+  "amount": 30000,
+  "successUrl": "http://localhost:8080/payments/success",
+  "failUrl": "http://localhost:8080/payments/fail"
+
+}
