@@ -1,13 +1,15 @@
+# jdbc:h2:mem:testdb
+# org.h2.Driver
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:mysql://s4.java21.net:13306/project_be10_team1_dev
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: project_be10_team1
+    password: N(zwIEW9ge2O3yXO
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:
