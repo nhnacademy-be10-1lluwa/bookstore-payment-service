@@ -1,7 +1,10 @@
 package com.nhnacademy.illuwa.config;
 
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.CacheControl;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -15,5 +18,10 @@ public class MvcConfiguration implements WebMvcConfigurer {
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/templates/", "classpath:/static/")
                 .setCacheControl(CacheControl.maxAge(10, TimeUnit.MINUTES));
+    }
+
+    @Bean
+    public RestTemplate getRestTemplate(RestTemplateBuilder builder) {
+        return builder.build();
     }
 }
