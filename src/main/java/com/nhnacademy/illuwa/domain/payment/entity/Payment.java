@@ -22,8 +22,8 @@ public class Payment {
 
     @Setter
     @OneToOne
-    @JoinColumn(name = "card_id", nullable = false)
-    private CardInfo cardInfo;
+    @JoinColumn(name = "card_info_id", nullable = false)
+    private CardInfoEntity cardInfoEntity;
 
     // 주문 번호
     @Setter

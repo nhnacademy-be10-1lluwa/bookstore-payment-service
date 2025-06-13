@@ -1,12 +1,15 @@
 package com.nhnacademy.illuwa.domain.payment.dto;
 
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Getter
+@Setter
 @NoArgsConstructor
 public class PaymentResponse {
 
@@ -23,6 +26,7 @@ public class PaymentResponse {
 
     @Getter
     @NoArgsConstructor
+    @Setter
     public static class CardInfo {
         private String issuerCode;
         private String acquirerCode;
