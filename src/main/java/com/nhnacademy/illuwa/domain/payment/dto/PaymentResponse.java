@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 
 @Getter
 @Setter
@@ -18,8 +20,8 @@ public class PaymentResponse {
     private String orderId;
     private String orderName;
     private String status;
-    private LocalDateTime requestedAt;
-    private LocalDateTime approvedAt;
+    private OffsetDateTime requestedAt;
+    private OffsetDateTime approvedAt;
     private CardInfo card;
 
     private int totalAmount;
