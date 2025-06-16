@@ -16,5 +16,5 @@ spring:
 
 
 toss:
-  secret-key: test_sk_XZYkKL4Mrj1zeG6AOQvAV0zJwlEW
-  api-key: test_ck_0RnYX2w532DyJ7OkKwqMrNeyqApQ
+  secret-key: test_sk_6BYq7GWPVvGwommJE6pnrNE5vbo1
+  api-key: test_ck_GePWvyJnrKJqoleKgWLbVgLzN97E

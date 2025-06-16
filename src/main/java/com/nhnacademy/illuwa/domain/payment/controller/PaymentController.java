@@ -21,7 +21,7 @@ import java.util.Base64;
 public class PaymentController {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private static final String API_SECRET_KEY = "test_sk_XZYkKL4Mrj1zeG6AOQvAV0zJwlEW";
+    private static final String API_SECRET_KEY = "test_sk_6BYq7GWPVvGwommJE6pnrNE5vbo1";
 
     @RequestMapping("/confirm/payment")
     public ResponseEntity<JSONObject> confirmPayment(@RequestBody String jsonBody) throws Exception {
@@ -32,6 +32,7 @@ public class PaymentController {
 
     @RequestMapping(value = "/callback-auth", method = RequestMethod.GET)
     public ResponseEntity<JSONObject> callbackAuth(@RequestParam String customerKey, @RequestParam String code) throws Exception {
+        // JSONObject -> json 데이터를 자바에서 객체처럼 다루기 위해 사용
         JSONObject requestData = new JSONObject();
         requestData.put("grantType", "AuthorizationCode");
         requestData.put("customerKey", customerKey);
