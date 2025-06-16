@@ -3,8 +3,9 @@ package com.nhnacademy.illuwa.domain.payment.entity;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum PaymentStatus {
+    // payment 개발자 센터의 status 사용
     // 대기 중, 승인 , 실패, 취소
-    PENDING, APPROVED, FAILED, CANCELLED;
+    READY, DONE, ABORTED, CANCELLED;
 
     @JsonCreator
     public static PaymentStatus forValue(String value) {
@@ -13,7 +14,7 @@ public enum PaymentStatus {
                 return paymentStatus;
             }
         }
-        return PaymentStatus.PENDING;
+        return PaymentStatus.READY;
     }
 
     @Override

@@ -37,11 +37,11 @@ public class PaymentServiceImpl implements PaymentService {
         CardInfoEntity cardInfoEntity = cardInfoEntityRepository.save(card);
 
         Payment payment = new Payment();
-        payment.setCardInfoEntity(card);
         payment.setOrderNumber(resp.getOrderId());
         payment.setPaymentStatus(PaymentStatus.forValue(resp.getStatus()));
         payment.setTotalAmount(BigDecimal.valueOf(resp.getTotalAmount()));
         payment.setApproveAt(resp.getApprovedAt().toLocalDateTime());
+        payment.setCardInfoEntity(cardInfoEntity);
 
         return paymentRepository.save(payment);
     }
