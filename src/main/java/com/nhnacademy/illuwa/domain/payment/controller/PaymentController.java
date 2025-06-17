@@ -38,18 +38,16 @@ public class PaymentController {
 
     // Json파일을 받아서 저장
     @RequestMapping("/confirm/payment")
+    @ResponseBody
     public ResponseEntity<JSONObject> confirmPayment(@RequestBody String jsonBody) throws Exception {
         // response -> json 객체
         JSONObject response = sendRequest(parseRequestData(jsonBody), API_SECRET_KEY, "https://api.tosspayments.com/v1/payments/confirm");
-        // 아래 코드가 작동이 되게 수정하면 됨
-       // paymentService.savePayment(response);
 
         if (!response.containsKey("error")) {
             // 객체 -> Json 문자열 -> java 객체
             PaymentResponse paymentResponse = objectMapper.readValue(response.toJSONString(), PaymentResponse.class);
             paymentService.savePayment(paymentResponse);
         }
-
 
         int statusCode = response.containsKey("error") ? 400 : 200;
         return ResponseEntity.status(statusCode).body(response);
@@ -109,6 +107,7 @@ public class PaymentController {
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public String index() {
+
         return "/payment/checkout";
     }
 
@@ -118,4 +117,14 @@ public class PaymentController {
         model.addAttribute("message", request.getParameter("message"));
         return "/fail";
     }
+
+      // @RestController일 경우
+//    @GetMapping("/orders/{orderId}")
+    @GetMapping("/v1/payments/orders/{orderId}")
+    @ResponseBody
+    public ResponseEntity<PaymentResponse> findPaymentByOrderId(@PathVariable String orderId) {
+        PaymentResponse resp = paymentService.findPaymentByOrderId(orderId);
+        return ResponseEntity.ok(resp); // 반드시 @ResponseBody 필요
+    }
+
 }
