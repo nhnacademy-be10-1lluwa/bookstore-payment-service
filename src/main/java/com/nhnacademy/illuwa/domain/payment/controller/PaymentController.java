@@ -1,11 +1,15 @@
 package com.nhnacademy.illuwa.domain.payment.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nhnacademy.illuwa.domain.payment.dto.PaymentResponse;
+import com.nhnacademy.illuwa.domain.payment.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,10 +26,29 @@ public class PaymentController {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private static final String API_SECRET_KEY = "test_sk_6BYq7GWPVvGwommJE6pnrNE5vbo1";
+    private final PaymentService paymentService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
+
+    public PaymentController(PaymentService paymentService) {
+        this.paymentService = paymentService;
+    }
+
+    // Json파일을 받아서 저장
     @RequestMapping("/confirm/payment")
+    @ResponseBody
     public ResponseEntity<JSONObject> confirmPayment(@RequestBody String jsonBody) throws Exception {
+        // response -> json 객체
         JSONObject response = sendRequest(parseRequestData(jsonBody), API_SECRET_KEY, "https://api.tosspayments.com/v1/payments/confirm");
+
+        if (!response.containsKey("error")) {
+            // 객체 -> Json 문자열 -> java 객체
+            PaymentResponse paymentResponse = objectMapper.readValue(response.toJSONString(), PaymentResponse.class);
+            paymentService.savePayment(paymentResponse);
+        }
+
         int statusCode = response.containsKey("error") ? 400 : 200;
         return ResponseEntity.status(statusCode).body(response);
     }
@@ -84,6 +107,7 @@ public class PaymentController {
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public String index() {
+
         return "/payment/checkout";
     }
 
@@ -93,4 +117,14 @@ public class PaymentController {
         model.addAttribute("message", request.getParameter("message"));
         return "/fail";
     }
+
+      // @RestController일 경우
+//    @GetMapping("/orders/{orderId}")
+    @GetMapping("/v1/payments/orders/{orderId}")
+    @ResponseBody
+    public ResponseEntity<PaymentResponse> findPaymentByOrderId(@PathVariable String orderId) {
+        PaymentResponse resp = paymentService.findPaymentByOrderId(orderId);
+        return ResponseEntity.ok(resp); // 반드시 @ResponseBody 필요
+    }
+
 }

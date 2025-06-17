@@ -1,14 +1,10 @@
 package com.nhnacademy.illuwa.domain.payment.dto;
 
-import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 
 @Getter
 @Setter
@@ -22,9 +18,9 @@ public class PaymentResponse {
     private String status;
     private OffsetDateTime requestedAt;
     private OffsetDateTime approvedAt;
-    private CardInfo card;
-
     private int totalAmount;
+
+    private CardInfo card;
 
     @Getter
     @NoArgsConstructor

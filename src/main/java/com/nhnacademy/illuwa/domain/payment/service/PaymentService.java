@@ -4,7 +4,8 @@ import com.nhnacademy.illuwa.domain.payment.dto.PaymentResponse;
 import com.nhnacademy.illuwa.domain.payment.entity.Payment;
 
 public interface PaymentService {
+    // 저장
     Payment savePayment(PaymentResponse paymentResponse);
-
-    Payment processPayment(String orderId);
+    //조회
+    PaymentResponse findPaymentByOrderId(String orderId);
 }

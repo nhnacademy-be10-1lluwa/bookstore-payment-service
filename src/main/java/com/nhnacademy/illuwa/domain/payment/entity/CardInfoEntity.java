@@ -39,5 +39,4 @@ public class CardInfoEntity {
     @Column(name = "card_type", length = 30, nullable = false)
     private String cardType;
 
-
 }

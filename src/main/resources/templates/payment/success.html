@@ -79,7 +79,7 @@
             window.location.href = `/fail.html?message=${err.message}&code=${err.code}`;
         });
 
-    // ✅ 추가: 주문번호 입력 후 조회
+    // 추가: 주문번호 입력 후 조회
     async function queryOrder() {
         const orderId = document.getElementById("queryOrderId").value;
 
