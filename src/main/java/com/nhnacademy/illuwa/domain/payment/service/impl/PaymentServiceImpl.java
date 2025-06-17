@@ -37,6 +37,7 @@ public class PaymentServiceImpl implements PaymentService {
         CardInfoEntity cardInfoEntity = cardInfoEntityRepository.save(card);
 
         Payment payment = new Payment();
+        payment.setPaymentKey(resp.getPaymentKey());
         payment.setOrderNumber(resp.getOrderId());
         payment.setPaymentStatus(PaymentStatus.forValue(resp.getStatus()));
         payment.setTotalAmount(BigDecimal.valueOf(resp.getTotalAmount()));
@@ -52,7 +53,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public Payment processPayment(String orderId) {
 
-        PaymentResponse response = tossPaymentService.fetchPaymentByOrderId(orderId);
+        PaymentResponse response = tossPaymentService.findPaymentByOrderId(orderId);
 
         return savePayment(response);
     }

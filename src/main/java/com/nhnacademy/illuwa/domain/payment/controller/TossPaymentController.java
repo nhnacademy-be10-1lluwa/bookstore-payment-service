@@ -21,9 +21,8 @@ public class TossPaymentController {
     private final PaymentService paymentService;
 
     @GetMapping("/orders/{orderId}")
-    public ResponseEntity<Payment> fetchPaymentByOrderId(@PathVariable String orderId) {
-        PaymentResponse resp = tossPaymentService.fetchPaymentByOrderId(orderId);
-        Payment saved = paymentService.savePayment(resp);
-        return ResponseEntity.ok(saved);
+    public ResponseEntity<PaymentResponse> fetchPaymentByOrderId(@PathVariable String orderId) {
+        PaymentResponse resp = tossPaymentService.findPaymentByOrderId(orderId);
+        return ResponseEntity.ok(resp);
     }
 }

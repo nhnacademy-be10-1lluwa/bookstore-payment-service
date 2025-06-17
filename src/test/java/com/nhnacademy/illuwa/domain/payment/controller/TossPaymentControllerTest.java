@@ -32,24 +32,21 @@ class TossPaymentControllerTest {
     void fetchPaymentByOrderId_mock기반_정상응답() {
         // given
         String orderId = "ORDER123";
-        Payment mockPayment = new Payment();
-        mockPayment.setOrderNumber(orderId);
+        PaymentResponse mockPayment = new PaymentResponse();
+        mockPayment.setOrderId(orderId);
 
-        when(tossPaymentService.fetchPaymentByOrderId(orderId))
-                .thenReturn(new PaymentResponse());
-
-        when(paymentService.savePayment(any()))
+        when(tossPaymentService.findPaymentByOrderId(orderId))
                 .thenReturn(mockPayment);
 
         // when
-        ResponseEntity<Payment> response = restTemplate.getForEntity(
+        ResponseEntity<PaymentResponse> response = restTemplate.getForEntity(
                 "/v1/payments/orders/" + orderId,
-                Payment.class
+                PaymentResponse.class
         );
 
         // then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getOrderNumber()).isEqualTo(orderId);
+        assertThat(response.getBody().getOrderId()).isEqualTo(orderId);
     }
 }

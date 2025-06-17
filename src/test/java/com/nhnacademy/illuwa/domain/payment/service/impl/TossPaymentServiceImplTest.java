@@ -58,7 +58,7 @@ public class TossPaymentServiceImplTest {
         when(objectMapper.readValue(jsonResponse, PaymentResponse.class)).thenReturn(mockPaymentResponse);
 
         // when
-        PaymentResponse result = tossPaymentService.fetchPaymentByOrderId(orderId);
+        PaymentResponse result = tossPaymentService.findPaymentByOrderId(orderId);
 
         // then
         assertThat(result).isNotNull();
@@ -90,7 +90,7 @@ public class TossPaymentServiceImplTest {
 
         // when + then
         assertThrows(RuntimeException.class, () -> {
-            tossPaymentService.fetchPaymentByOrderId(orderId);
+            tossPaymentService.findPaymentByOrderId(orderId);
         });
     }
 

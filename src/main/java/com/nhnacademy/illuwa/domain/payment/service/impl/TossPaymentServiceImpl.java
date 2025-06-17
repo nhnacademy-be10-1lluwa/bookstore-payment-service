@@ -48,7 +48,7 @@ public class TossPaymentServiceImpl implements TossPaymentService {
 //    }
 
     @Override
-    public PaymentResponse fetchPaymentByOrderId(String orderId) {
+    public PaymentResponse findPaymentByOrderId(String orderId) {
         try {
             URI uri = new URI("https://api.tosspayments.com/v1/payments/orders/" + orderId);
             HttpEntity<Void> entity = new HttpEntity<>(createHeaders());

@@ -20,6 +20,10 @@ public class Payment {
     @Column(name = "payment_id")
     private Long paymentId;
 
+    @Setter
+    @Column(name = "payment_key", nullable = false)
+    private String paymentKey;
+
     // 주문 번호
     @Setter
     @Column(name = "order_number", nullable = false)

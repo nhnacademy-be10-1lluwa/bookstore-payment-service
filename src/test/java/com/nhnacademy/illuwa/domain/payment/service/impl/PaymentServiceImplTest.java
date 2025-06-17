@@ -57,7 +57,7 @@ public class PaymentServiceImplTest {
         Payment savedPayment = new Payment();  // 더미 리턴값
 
         // stubbing
-        when(tossPaymentService.fetchPaymentByOrderId(orderId)).thenReturn(mockResponse);
+        when(tossPaymentService.findPaymentByOrderId(orderId)).thenReturn(mockResponse);
         when(cardInfoEntityRepository.save(any())).thenReturn(new CardInfoEntity());
         when(paymentRepository.save(any())).thenReturn(savedPayment);
 
@@ -65,7 +65,7 @@ public class PaymentServiceImplTest {
         Payment result = paymentService.processPayment(orderId);
 
         // then
-        verify(tossPaymentService).fetchPaymentByOrderId(orderId);
+        verify(tossPaymentService).findPaymentByOrderId(orderId);
         verify(cardInfoEntityRepository).save(any(CardInfoEntity.class));
         verify(paymentRepository).save(any(Payment.class));
 
