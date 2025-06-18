@@ -3,7 +3,6 @@ package com.nhnacademy.illuwa.domain.payment.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.illuwa.domain.payment.dto.PaymentResponse;
 import com.nhnacademy.illuwa.domain.payment.dto.RefundRequest;
-import com.nhnacademy.illuwa.domain.payment.entity.Payment;
 import com.nhnacademy.illuwa.domain.payment.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.json.simple.JSONObject;
