@@ -1,10 +1,13 @@
 package com.nhnacademy.illuwa.domain.payment.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 @Getter
 @Setter
@@ -16,7 +19,9 @@ public class PaymentResponse {
     private String orderId;
     private String orderName;
     private String status;
+    // 요청시간
     private OffsetDateTime requestedAt;
+    // 승인사간
     private OffsetDateTime approvedAt;
     private int totalAmount;
 
