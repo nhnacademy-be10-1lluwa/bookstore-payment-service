@@ -16,7 +16,9 @@ public class PaymentResponse {
     private String orderId;
     private String orderName;
     private String status;
+    // 요청시간
     private OffsetDateTime requestedAt;
+    // 승인사간
     private OffsetDateTime approvedAt;
     private int totalAmount;
 

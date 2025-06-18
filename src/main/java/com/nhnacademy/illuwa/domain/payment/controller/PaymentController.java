@@ -2,6 +2,7 @@ package com.nhnacademy.illuwa.domain.payment.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.illuwa.domain.payment.dto.PaymentResponse;
+import com.nhnacademy.illuwa.domain.payment.dto.RefundRequest;
 import com.nhnacademy.illuwa.domain.payment.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.json.simple.JSONObject;
@@ -125,6 +126,15 @@ public class PaymentController {
     public ResponseEntity<PaymentResponse> findPaymentByOrderId(@PathVariable String orderId) {
         PaymentResponse resp = paymentService.findPaymentByOrderId(orderId);
         return ResponseEntity.ok(resp); // 반드시 @ResponseBody 필요
+    }
+
+
+    @PostMapping("/v1/payments/{paymentKey}/cancel")
+    public ResponseEntity<PaymentResponse> cancelPayment(@PathVariable String paymentKey,
+                                                 @RequestBody RefundRequest refundRequest) {
+        refundRequest.setPaymentKey(paymentKey);
+        PaymentResponse response = paymentService.cancelPayment(refundRequest);
+        return ResponseEntity.ok(response);
     }
 
 }
