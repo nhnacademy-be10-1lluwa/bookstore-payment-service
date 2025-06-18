@@ -1,4 +1,5 @@
 package com.nhnacademy.illuwa.domain.payment.controller;
 
-public class PaymentController {
+// 통합테스트
+public class PaymentControllerTest {
 }

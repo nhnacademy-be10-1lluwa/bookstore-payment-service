@@ -1,5 +1,6 @@
 package com.nhnacademy.illuwa.domain.payment.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.illuwa.domain.payment.dto.PaymentResponse;
 import com.nhnacademy.illuwa.domain.payment.dto.RefundRequest;
@@ -21,6 +22,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.util.Base64;
@@ -71,18 +73,25 @@ class PaymentServiceImpl implements PaymentService {
     // 조회
     @Override
     public PaymentResponse findPaymentByOrderId(String orderId) {
+        // 결제 조회 url 구현
+        URI uri = null;
         try {
-            // 결제 조회 url 구현
-            URI uri = new URI("https://api.tosspayments.com/v1/payments/orders/" + orderId);
-            HttpEntity<Void> entity = new HttpEntity<>(createHeaders());
-            // 요청을 보내고 받은 정보를 response에 저장함
-            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
+            uri = new URI("https://api.tosspayments.com/v1/payments/orders/" + orderId);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
 
-            if (!response.getStatusCode().is2xxSuccessful()) {
-                throw new OrderIdNotFoundException("해당 주문 번호를 찾지 못했습니다.");
-            }
+        HttpEntity<Void> entity = new HttpEntity<>(createHeaders());
+        // 요청을 보내고 받은 정보를 response에 저장함
+        ResponseEntity<PaymentResponse> response = restTemplate.exchange(uri, HttpMethod.GET, entity, PaymentResponse.class);
 
-            PaymentResponse resp = objectMapper.readValue(response.getBody(), PaymentResponse.class);
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new OrderIdNotFoundException("해당 주문 번호를 찾지 못했습니다.");
+        }
+
+        PaymentResponse resp = response.getBody();
+
+        if (resp != null) {
             resp.setRequestedAt(
                     resp.getRequestedAt()
                             .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
@@ -94,46 +103,51 @@ class PaymentServiceImpl implements PaymentService {
                             .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
                             .toOffsetDateTime()
             );
-
-            return resp;
-        } catch (Exception e) {
-            throw new RuntimeException("결제 정보 조회 중 오류 발생", e);
         }
+
+        return resp;
+
     }
 
     // 환불
     @Override
     public PaymentResponse cancelPayment(RefundRequest refundRequest) {
+        // 환불에 필요한 paymentKey
+        String paymentKey = refundRequest.getPaymentKey();
+
+        Payment payment = paymentRepository.findByPaymentKey(paymentKey);
+
+        if (payment == null) {
+            throw new PaymentKeyNotFoundException("해당 결제 건을 찾을 수 없습니다. \n" + "paymentKey: " + paymentKey);
+        }
+        if (payment.getPaymentStatus().equals(PaymentStatus.CANCELLED)) {
+            throw new PaymentAlreadyCanceledException("이미 환불 처리된 결제 정보입니다. \n" + "paymentKey: " + paymentKey);
+        }
+
+        URI uri = null;
         try {
-            // 환불에 필요한 paymentKey
-            String paymentKey = refundRequest.getPaymentKey();
+            uri = new URI("https://api.tosspayments.com/v1/payments/" + paymentKey + "/cancel");
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
 
-            Payment payment = paymentRepository.findByPaymentKey(paymentKey);
+        // 환불 요청 사항
+        Map<String, String> body = new HashMap<>();
+        body.put("cancelReason", refundRequest.getCancelReason());
 
-            if (payment == null) {
-                throw new PaymentKeyNotFoundException("해당 결제 건을 찾을 수 없습니다. \n" + "paymentKey: " + paymentKey);
-            }
-            if (payment.getPaymentStatus().equals(PaymentStatus.CANCELLED)) {
-                throw new PaymentAlreadyCanceledException("이미 환불 처리된 결제 정보입니다. \n" + "paymentKey: " + paymentKey);
-            }
+        HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, createHeaders());
+        ResponseEntity<PaymentResponse> response = restTemplate.postForEntity(uri, entity, PaymentResponse.class);
 
-            URI uri = new URI("https://api.tosspayments.com/v1/payments/" + paymentKey + "/cancel");
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("환불 실패: " + response.getStatusCode());
+        }
 
-            // 환불 요청 사항
-            Map<String, String> body = new HashMap<>();
-            body.put("cancelReason", refundRequest.getCancelReason());
+        payment.setPaymentStatus(PaymentStatus.CANCELLED);
+        paymentRepository.save(payment);
 
-            HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, createHeaders());
-            ResponseEntity<String> response = restTemplate.postForEntity(uri, entity, String.class);
+        PaymentResponse resp = response.getBody();
 
-            if (!response.getStatusCode().is2xxSuccessful()) {
-                throw new RuntimeException("환불 실패: " + response.getStatusCode());
-            }
-
-            payment.setPaymentStatus(PaymentStatus.CANCELLED);
-            paymentRepository.save(payment);
-
-            PaymentResponse resp = objectMapper.readValue(response.getBody(), PaymentResponse.class);
+        if (resp != null) {
             resp.setRequestedAt(
                     resp.getRequestedAt()
                             .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
@@ -145,12 +159,10 @@ class PaymentServiceImpl implements PaymentService {
                             .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
                             .toOffsetDateTime()
             );
-
-            return resp;
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
+
+
+        return resp;
     }
 
 
