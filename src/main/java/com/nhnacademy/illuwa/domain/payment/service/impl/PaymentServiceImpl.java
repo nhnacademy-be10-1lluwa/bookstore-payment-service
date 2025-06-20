@@ -1,15 +1,12 @@
 package com.nhnacademy.illuwa.domain.payment.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.illuwa.domain.payment.dto.PaymentResponse;
 import com.nhnacademy.illuwa.domain.payment.dto.RefundRequest;
 import com.nhnacademy.illuwa.domain.payment.entity.CardInfoEntity;
 import com.nhnacademy.illuwa.domain.payment.entity.Payment;
 import com.nhnacademy.illuwa.domain.payment.entity.PaymentStatus;
-import com.nhnacademy.illuwa.domain.payment.exception.OrderIdNotFoundException;
-import com.nhnacademy.illuwa.domain.payment.exception.PaymentAlreadyCanceledException;
-import com.nhnacademy.illuwa.domain.payment.exception.PaymentKeyNotFoundException;
+import com.nhnacademy.illuwa.domain.payment.exception.*;
 import com.nhnacademy.illuwa.domain.payment.repository.CardInfoEntityRepository;
 import com.nhnacademy.illuwa.domain.payment.repository.PaymentRepository;
 import com.nhnacademy.illuwa.domain.payment.service.PaymentService;
@@ -24,6 +21,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Base64;
 import java.util.HashMap;
@@ -78,31 +76,25 @@ class PaymentServiceImpl implements PaymentService {
         try {
             uri = new URI("https://api.tosspayments.com/v1/payments/orders/" + orderId);
         } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
+            throw new InvalidPaymentUriException("잘못된 URI 정보입니다.");
         }
 
         HttpEntity<Void> entity = new HttpEntity<>(createHeaders());
         // 요청을 보내고 받은 정보를 response에 저장함
         ResponseEntity<PaymentResponse> response = restTemplate.exchange(uri, HttpMethod.GET, entity, PaymentResponse.class);
 
-        if (!response.getStatusCode().is2xxSuccessful()) {
+        if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
             throw new OrderIdNotFoundException("해당 주문 번호를 찾지 못했습니다.");
         }
 
         PaymentResponse resp = response.getBody();
 
         if (resp != null) {
-            resp.setRequestedAt(
-                    resp.getRequestedAt()
-                            .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
-                            .toOffsetDateTime()
-            );
+            resp.setRequestedAt(toKST(resp.getRequestedAt()));
 
-            resp.setApprovedAt(
-                    resp.getApprovedAt()
-                            .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
-                            .toOffsetDateTime()
-            );
+            if (resp.getApprovedAt() != null) {
+                resp.setApprovedAt(toKST(resp.getApprovedAt()));
+            }
         }
 
         return resp;
@@ -128,7 +120,7 @@ class PaymentServiceImpl implements PaymentService {
         try {
             uri = new URI("https://api.tosspayments.com/v1/payments/" + paymentKey + "/cancel");
         } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
+            throw new InvalidPaymentUriException("잘못된 URI 정보입니다.");
         }
 
         // 환불 요청 사항
@@ -139,7 +131,7 @@ class PaymentServiceImpl implements PaymentService {
         ResponseEntity<PaymentResponse> response = restTemplate.postForEntity(uri, entity, PaymentResponse.class);
 
         if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException("환불 실패: " + response.getStatusCode());
+            throw new PaymentRefundFailedException("환불 요청에 실패했습니다.");
         }
 
         payment.setPaymentStatus(PaymentStatus.CANCELLED);
@@ -148,19 +140,12 @@ class PaymentServiceImpl implements PaymentService {
         PaymentResponse resp = response.getBody();
 
         if (resp != null) {
-            resp.setRequestedAt(
-                    resp.getRequestedAt()
-                            .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
-                            .toOffsetDateTime()
-            );
+            resp.setRequestedAt(toKST(resp.getRequestedAt()));
 
-            resp.setApprovedAt(
-                    resp.getApprovedAt()
-                            .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
-                            .toOffsetDateTime()
-            );
+            if (resp.getApprovedAt() != null) {
+                resp.setApprovedAt(toKST(resp.getApprovedAt()));
+            }
         }
-
 
         return resp;
     }
@@ -179,4 +164,10 @@ class PaymentServiceImpl implements PaymentService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         return headers;
     }
+
+
+    private OffsetDateTime toKST(OffsetDateTime dateTime) {
+        return dateTime.atZoneSameInstant(ZoneId.of("Asia/Seoul")).toOffsetDateTime();
+    }
+
 }

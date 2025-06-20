@@ -5,6 +5,7 @@ import com.nhnacademy.illuwa.domain.payment.dto.PaymentResponse;
 import com.nhnacademy.illuwa.domain.payment.dto.RefundRequest;
 import com.nhnacademy.illuwa.domain.payment.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -131,7 +132,7 @@ public class PaymentController {
 
     @PostMapping("/v1/payments/{paymentKey}/cancel")
     public ResponseEntity<PaymentResponse> cancelPayment(@PathVariable String paymentKey,
-                                                 @RequestBody RefundRequest refundRequest) {
+                                                 @RequestBody @Valid RefundRequest refundRequest) {
         refundRequest.setPaymentKey(paymentKey);
         PaymentResponse response = paymentService.cancelPayment(refundRequest);
         return ResponseEntity.ok(response);

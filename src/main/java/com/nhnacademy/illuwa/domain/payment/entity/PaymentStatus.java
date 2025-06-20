@@ -1,6 +1,7 @@
 package com.nhnacademy.illuwa.domain.payment.entity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.nhnacademy.illuwa.domain.payment.exception.InvalidPaymentStatusException;
 
 public enum PaymentStatus {
     // payment 개발자 센터의 status 사용
@@ -14,7 +15,7 @@ public enum PaymentStatus {
                 return paymentStatus;
             }
         }
-        return PaymentStatus.READY;
+        throw new InvalidPaymentStatusException(value + "' 은 유효하지 않은 결제 상태입니다.");
     }
 
     @Override

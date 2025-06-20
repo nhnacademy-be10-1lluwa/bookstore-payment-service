@@ -53,8 +53,11 @@
 
 </div>
 <script>
+    // Toss API 에서 발금한 클라이언트 키
     const clientKey = "test_ck_GePWvyJnrKJqoleKgWLbVgLzN97E";
+    // Toss API 에서 고객을 식별하기위해 로그인한 회원을 식별하는 고유 식별용 값
     const customerKey = generateRandomString();
+    // Toss API의 SDK 객체 초기화
     const tossPayments = TossPayments(clientKey);
     // ------  SDK 초기화 ------
     // TODO: clientKey는 개발자센터의 API 개별 연동 키 > 결제창 연동에 사용하려할 MID > 클라이언트 키로 바꾸세요.
@@ -63,6 +66,7 @@
     // @docs https://docs.tosspayments.com/sdk/v2/js#토스페이먼츠-초기화
     // 회원 결제
     // @docs https://docs.tosspayments.com/sdk/v2/js#tosspaymentspayment
+    // SDK 에서 고객 정보를 기반으로 결제 정보를 생성
     const payment = tossPayments.payment({ customerKey });
     // 비회원 결제
     // const payment = tossPayments.payment({customerKey: TossPayments.ANONYMOUS});
@@ -103,6 +107,7 @@
 
         const [bookName, rawAmount] = form.get("book").split(":");
 
+        // 결제 정보에 필요한 정보를 전달함
         payment.requestPayment({
             method: "CARD",
             amount: {

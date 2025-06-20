@@ -1,5 +1,5 @@
 ###
-POST localhost:8080/v1/payments/tviva20250618164152pcM60/cancel
+POST localhost:8080/v1/payments/tviva202506201145545hys4/cancel
 Content-Type: application/json
 
 {
