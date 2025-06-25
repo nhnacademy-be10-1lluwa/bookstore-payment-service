@@ -45,27 +45,35 @@ class PaymentControllerTest {
                 .andExpect(jsonPath("$.orderId").value("order-123"));
     }
 
+
     @Test
-    @DisplayName("POST /v1/payments/{paymentKey}/cancel - 환불 성공")
+    @DisplayName("POST /v1/payments/orders/{orderId}/cancel - 환불 성공")
     void cancelPayment_success() throws Exception {
         RefundRequest refundRequest = new RefundRequest();
         refundRequest.setCancelReason("테스트 환불");
 
+        // 1) 주문 조회용 paymentKey 세팅을 위한 mock
+        PaymentResponse saved = new PaymentResponse();
+        saved.setPaymentKey("key");
+        when(paymentService.findPaymentByOrderId("key")).thenReturn(saved);
+
+        // 2) 실제 refund 호출 결과 mock
         PaymentResponse response = new PaymentResponse();
         response.setPaymentKey("key");
         response.setStatus("CANCELLED");
-
         when(paymentService.cancelPayment(any())).thenReturn(response);
 
         String json = objectMapper.writeValueAsString(refundRequest);
 
-        mockMvc.perform(post("/v1/payments/key/cancel")
+        mockMvc.perform(post("/v1/payments/orders/key/cancel")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paymentKey").value("key"))
                 .andExpect(jsonPath("$.status").value("CANCELLED"));
     }
+
+
 
     @Test
     @DisplayName("GET / - 결제 페이지")
