@@ -31,18 +31,20 @@
         <button class="button p-grid-col5" onclick="location.href='https://discord.gg/A4fRFXQhRu';" style="background-color: #e8f3ff; color: #1b64da">실시간 문의</button>
     </div>
 </div>
+<!-- 추가된 입력창 + 조회 버튼 -->
+<div class="box_section" style="width: 600px; margin-top: 30px;">
+    <h3>주문번호로 결제 조회</h3>
+    <input type="text" id="queryOrderId" placeholder="order-123456789" style="width: 400px; padding: 8px;" />
+    <div style="margin-top: 30px; text-align: right">
+        <button onclick="queryOrder()">조회</button>
+        <button onclick="queryRefund()">환불</button>
+    </div>
+</div>
 
 <div class="box_section" style="width: 600px; text-align: left">
     <b>Response Data :</b>
     <div id="response" style="white-space: initial"></div>
 </div>
-<!-- 추가된 입력창 + 조회 버튼 -->
-<div class="box_section" style="width: 600px; margin-top: 30px;">
-    <h3>주문번호로 결제 조회</h3>
-    <input type="text" id="queryOrderId" placeholder="order-123456789" style="width: 400px; padding: 8px;" />
-    <button onclick="queryOrder()">조회</button>
-</div>
-
 <script>
     const urlParams = new URLSearchParams(window.location.search);
 
@@ -99,6 +101,45 @@
             document.getElementById("response").innerHTML = `<pre>${JSON.stringify(json, null, 4)}</pre>`;
         } catch (err) {
             document.getElementById("response").innerHTML = `<pre style="color: red;">조회 실패: ${JSON.stringify(err, null, 4)}</pre>`;
+        }
+    }
+
+    async function queryRefund() {
+        // ① 화면에 찍힌 JSON 가져오기
+        const raw = document.getElementById("response").textContent.trim();
+        if (!raw) return alert("먼저 주문을 조회해주세요.");
+
+        let json;
+        try {
+            json = JSON.parse(raw);
+        } catch {
+            return alert("올바른 조회 결과가 아닙니다.");
+        }
+
+        // 이제 JSON 안의 orderId 를 사용
+        const orderId = json.orderId;
+        if (!orderId) {
+            return alert("조회된 주문번호가 없습니다.");
+        }
+
+        const reason = window.prompt("환불 사유를 입력하세요:");
+        if (!reason || !reason.trim()) {
+            return alert("환불 사유를 입력해야 합니다.");
+        }
+
+        try {
+            const res = await fetch(`/v1/payments/orders/${orderId}/cancel`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ cancelReason: reason })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "환불 실패");
+
+            alert("환불이 정상 처리되었습니다.");
+            window.location.href = "/";
+        } catch (e) {
+            alert("환불 실패: " + e.message);
         }
     }
 
