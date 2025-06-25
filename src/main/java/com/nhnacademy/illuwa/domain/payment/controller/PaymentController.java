@@ -129,13 +129,18 @@ public class PaymentController {
         return ResponseEntity.ok(resp); // 반드시 @ResponseBody 필요
     }
 
+    // 환불 (OrderId)
+    @PostMapping("/v1/payments/orders/{orderId}/cancel")
+    public ResponseEntity<PaymentResponse> cancelByOrderId(
+            @PathVariable String orderId,
+            @RequestBody @Valid RefundRequest refundRequest) {
 
-    @PostMapping("/v1/payments/{paymentKey}/cancel")
-    public ResponseEntity<PaymentResponse> cancelPayment(@PathVariable String paymentKey,
-                                                 @RequestBody @Valid RefundRequest refundRequest) {
-        refundRequest.setPaymentKey(paymentKey);
+        PaymentResponse rep = paymentService.findPaymentByOrderId(orderId);
+
+        refundRequest.setPaymentKey(rep.getPaymentKey());
+
         PaymentResponse response = paymentService.cancelPayment(refundRequest);
+
         return ResponseEntity.ok(response);
     }
-
 }

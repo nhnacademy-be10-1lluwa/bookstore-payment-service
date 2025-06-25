@@ -9,7 +9,6 @@ public interface PaymentService {
     Payment savePayment(PaymentResponse paymentResponse);
     //조회
     PaymentResponse findPaymentByOrderId(String orderId);
-
     //환불
     PaymentResponse cancelPayment(RefundRequest refundRequest);
 }
