@@ -30,6 +30,17 @@ jobs:
           username: ${{ secrets.SSH_ID }}
           password: ${{ secrets.REMOTE_PASS }}
           port: ${{ secrets.SSH_PORT }}
-          source: "target/user-service.jar"
-          target: "~/deploy/user"
+          source: "target/1lluwa-payment-service.jar"
+          target: "~/deploy/payment"
           rm: false
+
+      - name: Restart service via remote script
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SSH_IP }}
+          username: ${{ secrets.SSH_ID }}
+          password: ${{ secrets.REMOTE_PASS }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd ~/deploy/payment
+            ./start.sh
