@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko"
+      layout:decorate="~{layout/layout}"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<head layout:fragment="head">
+  <meta charset="utf-8">
+  <link rel="stylesheet" th:href="@{/css/main.css}" />
+  <script src="https://js.tosspayments.com/v2/standard"></script>
+</head>
+<main layout:fragment="content">
+  <div class="confirm-section">
+    <h1 id="orderId">주문 번호 : 20251030120000-039204331</h1>
+  </div>
+
+  <!-- 🚚 배송지 요약 -->
+  <div class="confirm-section">
+    <h2>배송지</h2>
+    <p>수취인 : 홍길동</p>
+    <p>연락처 : 010-1234-5678</p>
+    <p>주소 : 서울특별시 강남구 테헤란로 123, 3층</p>
+  </div>
+
+  <!-- 🎁 적용 쿠폰 / 할인 -->
+  <div class="confirm-section">
+    <h2>할인 · 쿠폰</h2>
+    <p>적용 쿠폰 : SPRINGSALE</p>
+    <p>쿠폰 할인 : −3,000원</p>
+    <!-- 필요하다면 포인트 / 프로모션 코드 등도 여기에 -->
+  </div>
+
+  <!-- 📚 주문 상품 요약 -->
+  <div class="confirm-section">
+    <h2>주문 상품</h2>
+    <table class="order-table">
+      <thead>
+      <tr>
+        <th>상품명</th>
+        <th>수량</th>
+        <th>가격</th>
+        <th>상품 할인</th>
+        <th>합계</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>Clean Code</td>
+        <td>1</td>
+        <td>25,000</td>
+        <td>−5,000</td>
+        <td>20,000</td>
+      </tr>
+      <!-- 반복 행 예시 -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 💳 결제 예정 금액 -->
+  <div class="confirm-summary">
+    <h2>결제 요약</h2>
+    <dl>
+      <dt>상품 금액</dt><dd>25,000</dd>
+      <dt>배송비</dt><dd>3,000</dd>
+      <dt>쿠폰 할인</dt><dd>−3,000</dd>
+      <dt>상품 할인</dt><dd>−5,000</dd>
+      <dt class="total">총 결제 금액</dt>a<dd class="total" id="totalAmount">20,000</dd>
+    </dl>
+  </div>
+
+  <!-- ✔️ 최종 진행 버튼 -->
+  <div class="confirm-action">
+    <button type="button" id="payment">결제하기</button>
+    <!-- 또는 <button type="submit">...</button> 형태로 폼 전송도 가능 -->
+  </div>
+</main>
+<script>
+  // 텍스트 출력
+  const rawOrder = document.getElementById(`orderId`).textContent;
+  const orderId = rawOrder.split(`:`)[1].trim();
+
+  const rawTotal = document.getElementById(`totalAmount`).textContent;
+  const amount = parseInt(rawTotal.replace(/,/g, ''), 10);
+
+  // Toss API 에서 발금한 클라이언트 키
+  const clientKey = "test_ck_GePWvyJnrKJqoleKgWLbVgLzN97E";
+  // Toss API 에서 고객을 식별하기위해 로그인한 회원을 식별하는 고유 식별용 값
+  const customerKey = generateRandomString();
+  // Toss API의 SDK 객체 초기화
+  const tossPayments = TossPayments(clientKey);
+  // SDK 에서 고객 정보를 기반으로 결제 정보를 생성
+  const payment = tossPayments.payment({ customerKey });
+
+  // 결제창 호출
+
+  document.getElementById(`payment`).addEventListener('click', () => {
+    payment.requestPayment({
+      method: `CARD`,
+      amount: {
+        currency: `KRW`,
+        value: amount
+      },
+      orderId: orderId,
+      orderName:  `일루와 도서 쇼핑물`,
+      successUrl: window.location.origin + `/payment/success.html`,
+      failUrl: window.location.origin + `/payment/fail.html`,
+    });
+  });
+
+  function generateRandomString() {
+    // Base64로 인코딩된 랜덤값을 20글자만 잘라서 씁니다
+    return window.btoa(Math.random().toString()).slice(0, 20);
+  }
+</script>
+</html>

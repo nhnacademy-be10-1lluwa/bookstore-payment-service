@@ -6,6 +6,7 @@ import com.nhnacademy.illuwa.domain.payment.dto.RefundRequest;
 import com.nhnacademy.illuwa.domain.payment.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import lombok.Getter;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -142,5 +143,10 @@ public class PaymentController {
         PaymentResponse response = paymentService.cancelPayment(refundRequest);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/payment/test")
+    public String testPage() {
+        return "payment/test";
     }
 }
