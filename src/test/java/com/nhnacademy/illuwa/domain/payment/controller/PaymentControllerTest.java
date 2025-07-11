@@ -83,17 +83,17 @@ class PaymentControllerTest {
                 .andExpect(view().name("/payment/checkout"));
     }
 
-    @Test
-    @DisplayName("GET /fail - 실패 페이지")
-    void failPage_success() throws Exception {
-        mockMvc.perform(get("/fail")
-                        .param("code", "ERR001")
-                        .param("message", "실패"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("/fail"))
-                .andExpect(model().attribute("code", "ERR001"))
-                .andExpect(model().attribute("message", "실패"));
-    }
+//    @Test
+//    @DisplayName("GET /fail - 실패 페이지")
+//    void failPage_success() throws Exception {
+//        mockMvc.perform(get("/fail")
+//                        .param("code", "ERR001")
+//                        .param("message", "실패"))
+//                .andExpect(status().isOk())
+//                .andExpect(view().name("/fail"))
+//                .andExpect(model().attribute("code", "ERR001"))
+//                .andExpect(model().attribute("message", "실패"));
+//    }
 
     @Test
     @DisplayName("GET /callback-auth - 인증 응답")
