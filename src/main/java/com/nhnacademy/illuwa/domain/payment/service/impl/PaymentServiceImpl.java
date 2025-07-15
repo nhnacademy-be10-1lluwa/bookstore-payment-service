@@ -1,6 +1,7 @@
 package com.nhnacademy.illuwa.domain.payment.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nhnacademy.illuwa.client.OrderServiceClient;
+import com.nhnacademy.illuwa.domain.payment.dto.PaymentConfirmRequest;
 import com.nhnacademy.illuwa.domain.payment.dto.PaymentResponse;
 import com.nhnacademy.illuwa.domain.payment.dto.RefundRequest;
 import com.nhnacademy.illuwa.domain.payment.entity.CardInfoEntity;
@@ -31,15 +32,41 @@ import java.util.Map;
 @RequiredArgsConstructor
 class PaymentServiceImpl implements PaymentService {
 
+    private final OrderServiceClient orderServiceClient;
+    private final RestTemplate restTemplate;
+
     private final PaymentRepository paymentRepository;
     private final CardInfoEntityRepository cardInfoEntityRepository;
 
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
-
-    // application-dev.yml secret-key
     @Value("${toss.secret-key}")
     private String secretKey;
+
+    @Override
+    public void confirm(PaymentConfirmRequest request) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(secretKey, "");
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> payload = Map.of(
+                "paymentKey", request.getPaymentKey(),
+                "orderId", request.getOrderNumber(),
+                "amount", request.getAmount()
+        );
+
+        HttpEntity<?> entity = new HttpEntity<>(payload, headers);
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                "https://api.tosspayments.com/v1/payments/confirm",
+                entity,
+                String.class
+        );
+
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("Toss 결제 승인 실패: " + response.getBody());
+        }
+
+        // 승인 성공 → 주문 상태 업데이트
+        orderServiceClient.updateOrderStatusToCompleted(request.getOrderNumber());
+    }
 
     // toss 의 결제 응답 dto -> PaymentResponse의 정보를 Payment에 저장
     @Override
