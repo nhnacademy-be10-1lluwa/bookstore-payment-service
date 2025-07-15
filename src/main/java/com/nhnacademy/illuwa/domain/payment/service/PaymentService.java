@@ -7,9 +7,9 @@ import com.nhnacademy.illuwa.domain.payment.entity.Payment;
 
 public interface PaymentService {
     // 결제 승인
-    void confirm(PaymentConfirmRequest request);
+    PaymentResponse confirm(PaymentConfirmRequest request);
     // 저장
-    Payment savePayment(PaymentResponse paymentResponse);
+    void savePayment(PaymentResponse paymentResponse);
     //조회
     PaymentResponse findPaymentByOrderId(String orderId);
     //환불

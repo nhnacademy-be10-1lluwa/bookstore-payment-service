@@ -33,9 +33,9 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @RequestMapping("/confirm")
-    public ResponseEntity<Void> confirmPayment(@RequestBody PaymentConfirmRequest request) throws Exception {
-        paymentService.confirm(request);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<PaymentResponse> confirmPayment(@RequestBody PaymentConfirmRequest request) throws Exception {
+        PaymentResponse paymentResponse = paymentService.confirm(request);
+        return ResponseEntity.ok(paymentResponse);
     }
 
 //      // @RestController일 경우
