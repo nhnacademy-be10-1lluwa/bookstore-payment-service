@@ -42,7 +42,7 @@ class PaymentServiceImpl implements PaymentService {
     private String secretKey;
 
     @Override
-    public void confirm(PaymentConfirmRequest request) {
+    public PaymentResponse confirm(PaymentConfirmRequest request) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(secretKey, "");
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -66,12 +66,19 @@ class PaymentServiceImpl implements PaymentService {
 
         // 승인 성공 → 주문 상태 업데이트
         orderServiceClient.updateOrderStatusToCompleted(request.getOrderNumber());
+
+        // 승인 성공 후 db 에 저장
+        PaymentResponse paymentResponse = findPaymentByOrderId(request.getOrderNumber());
+
+        savePayment(paymentResponse);
+
+        return paymentResponse;
     }
 
     // toss 의 결제 응답 dto -> PaymentResponse의 정보를 Payment에 저장
     @Override
     @Transactional
-    public Payment savePayment(PaymentResponse resp) {
+    public void savePayment(PaymentResponse resp) {
         CardInfoEntity card = new CardInfoEntity();
         card.setIssuerCode(resp.getCard().getIssuerCode());
         card.setAcquirerCode(resp.getCard().getAcquirerCode());
@@ -91,8 +98,7 @@ class PaymentServiceImpl implements PaymentService {
                 atZoneSameInstant(ZoneId.of("Asia/Seoul")).
                 toLocalDateTime());
         payment.setCardInfoEntity(cardInfoEntity);
-
-        return paymentRepository.save(payment);
+        paymentRepository.save(payment);
     }
 
     // 조회

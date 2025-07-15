@@ -10,8 +10,6 @@ import java.time.OffsetDateTime;
 @Setter
 @NoArgsConstructor
 public class PaymentResponse {
-
-    private String mId;
     private String paymentKey;
     private String orderId;
     private String orderName;
@@ -34,5 +32,4 @@ public class PaymentResponse {
         private String cardType;
         private int amount;
     }
-
 }
