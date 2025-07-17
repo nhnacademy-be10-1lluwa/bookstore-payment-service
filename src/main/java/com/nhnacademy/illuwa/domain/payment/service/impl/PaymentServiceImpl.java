@@ -2,8 +2,8 @@ package com.nhnacademy.illuwa.domain.payment.service.impl;
 
 import com.nhnacademy.illuwa.client.OrderServiceClient;
 import com.nhnacademy.illuwa.domain.payment.dto.PaymentConfirmRequest;
+import com.nhnacademy.illuwa.domain.payment.dto.PaymentRefundRequest;
 import com.nhnacademy.illuwa.domain.payment.dto.PaymentResponse;
-import com.nhnacademy.illuwa.domain.payment.dto.RefundRequest;
 import com.nhnacademy.illuwa.domain.payment.entity.CardInfoEntity;
 import com.nhnacademy.illuwa.domain.payment.entity.Payment;
 import com.nhnacademy.illuwa.domain.payment.entity.PaymentStatus;
@@ -136,9 +136,11 @@ class PaymentServiceImpl implements PaymentService {
 
     // 환불
     @Override
-    public PaymentResponse cancelPayment(RefundRequest refundRequest) {
+    public PaymentResponse cancelPayment(PaymentRefundRequest refundRequest) {
+        PaymentResponse paymentResponse = findPaymentByOrderId(refundRequest.getOrderNumber());
+
         // 환불에 필요한 paymentKey
-        String paymentKey = refundRequest.getPaymentKey();
+        String paymentKey = paymentResponse.getPaymentKey();
 
         Payment payment = paymentRepository.findByPaymentKey(paymentKey);
 

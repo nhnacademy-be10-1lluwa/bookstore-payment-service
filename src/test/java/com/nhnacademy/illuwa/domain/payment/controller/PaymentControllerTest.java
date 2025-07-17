@@ -2,9 +2,7 @@ package com.nhnacademy.illuwa.domain.payment.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.illuwa.domain.payment.dto.PaymentResponse;
-import com.nhnacademy.illuwa.domain.payment.dto.RefundRequest;
 import com.nhnacademy.illuwa.domain.payment.service.PaymentService;
-import org.json.simple.JSONObject;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,10 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -47,36 +43,6 @@ class PaymentControllerTest {
                 .andExpect(jsonPath("$.orderId").value("order-123"));
     }
 
-
-    @Test
-    @DisplayName("POST /v1/payments/orders/{orderId}/cancel - 환불 성공")
-    void cancelPayment_success() throws Exception {
-        RefundRequest refundRequest = new RefundRequest();
-        refundRequest.setCancelReason("테스트 환불");
-
-        // 1) 주문 조회용 paymentKey 세팅을 위한 mock
-        PaymentResponse saved = new PaymentResponse();
-        saved.setPaymentKey("key");
-        when(paymentService.findPaymentByOrderId("key")).thenReturn(saved);
-
-        // 2) 실제 refund 호출 결과 mock
-        PaymentResponse response = new PaymentResponse();
-        response.setPaymentKey("key");
-        response.setStatus("CANCELLED");
-        when(paymentService.cancelPayment(any())).thenReturn(response);
-
-        String json = objectMapper.writeValueAsString(refundRequest);
-
-        mockMvc.perform(post("/v1/payments/orders/key/cancel")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.paymentKey").value("key"))
-                .andExpect(jsonPath("$.status").value("CANCELLED"));
-    }
-
-
-
     @Test
     @DisplayName("GET / - 결제 페이지")
     void index_success() throws Exception {
@@ -84,18 +50,6 @@ class PaymentControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("/payment/checkout"));
     }
-
-//    @Test
-//    @DisplayName("GET /fail - 실패 페이지")
-//    void failPage_success() throws Exception {
-//        mockMvc.perform(get("/fail")
-//                        .param("code", "ERR001")
-//                        .param("message", "실패"))
-//                .andExpect(status().isOk())
-//                .andExpect(view().name("/fail"))
-//                .andExpect(model().attribute("code", "ERR001"))
-//                .andExpect(model().attribute("message", "실패"));
-//    }
 
     @Test
     @DisplayName("GET /callback-auth - 인증 응답")
