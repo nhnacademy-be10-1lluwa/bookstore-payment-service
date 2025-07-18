@@ -3,7 +3,7 @@ name: Deploy Front-Service to Server
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   deploy:
