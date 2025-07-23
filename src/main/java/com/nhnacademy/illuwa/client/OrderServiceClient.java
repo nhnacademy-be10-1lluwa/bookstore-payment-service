@@ -6,6 +6,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 @FeignClient(name = "order-service")
 public interface OrderServiceClient {
-    @PostMapping("/api/order/common/payment-success/{orderNumber}")
-    void updateOrderStatusToCompleted(@PathVariable String orderNumber);
+    @PostMapping("/api/order/common/payment-success/{order-number}")
+    void updateOrderStatusToCompleted(@PathVariable("order-number") String orderNumber);
 }
