@@ -44,42 +44,36 @@ class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public PaymentResponse confirm(PaymentConfirmRequest request) {
-        try {
-            // Toss API 호출
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBasicAuth(secretKey, "");
-            headers.setContentType(MediaType.APPLICATION_JSON);
+        // Toss API 호출
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(secretKey, "");
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-            Map<String, Object> payload = Map.of(
-                    "paymentKey", request.getPaymentKey(),
-                    "orderId", request.getOrderNumber(),
-                    "amount", request.getAmount()
-            );
+        Map<String, Object> payload = Map.of(
+                "paymentKey", request.getPaymentKey(),
+                "orderId", request.getOrderNumber(),
+                "amount", request.getAmount()
+        );
 
-            HttpEntity<?> entity = new HttpEntity<>(payload, headers);
-            ResponseEntity<String> response = restTemplate.postForEntity(
-                    "https://api.tosspayments.com/v1/payments/confirm",
-                    entity,
-                    String.class
-            );
+        HttpEntity<?> entity = new HttpEntity<>(payload, headers);
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                "https://api.tosspayments.com/v1/payments/confirm",
+                entity,
+                String.class
+        );
 
-            if (!response.getStatusCode().is2xxSuccessful()) {
-                throw new RuntimeException("Toss 결제 승인 실패: " + response.getBody());
-            }
-
-            // 결제 정보 저장
-            PaymentResponse paymentResponse = findPaymentByOrderId(request.getOrderNumber());
-            savePayment(paymentResponse);
-
-            // 주문 상태 업데이트
-            orderServiceClient.updateOrderStatusToCompleted(request.getOrderNumber());
-
-            return paymentResponse;
-
-        } catch (Exception e) {
-            // 오류 발생 시 결제 상태 검증 및 복구
-            return handlePaymentError(request.getOrderNumber(), e);
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("Toss 결제 승인 실패: " + response.getBody());
         }
+
+        // 승인 성공 → 주문 상태 업데이트
+        orderServiceClient.updateOrderStatusToCompleted(request.getOrderNumber());
+
+        // 승인 성공 후 db 에 저장
+        PaymentResponse paymentResponse = findPaymentByOrderId(request.getOrderNumber());
+        savePayment(paymentResponse);
+
+        return paymentResponse;
     }
 
     // toss 의 결제 응답 dto -> PaymentResponse의 정보를 Payment에 저장
