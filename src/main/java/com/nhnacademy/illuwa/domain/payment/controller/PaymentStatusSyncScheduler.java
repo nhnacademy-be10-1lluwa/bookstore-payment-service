@@ -23,7 +23,7 @@ public class PaymentStatusSyncScheduler {
     private final PaymentService paymentService;
     private final OrderServiceClient orderServiceClient;
 
-    @Scheduled(fixedDelay = 300000)
+    @Scheduled(fixedDelay = 1800000)
     public void syncPendingPayments() {
         List<Payment> pendingPayments = paymentRepository.findByPaymentStatus(PaymentStatus.READY);
 
