@@ -42,37 +42,50 @@ class PaymentServiceImpl implements PaymentService {
     private String secretKey;
 
     @Override
+    @Transactional
     public PaymentResponse confirm(PaymentConfirmRequest request) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth(secretKey, "");
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        try {
+            // 1. 이미 처리된 결제인지 확인 (멱등성 보장)
+            Payment existingPayment = paymentRepository.findByOrderNumber(request.getOrderNumber());
+            if (existingPayment != null && existingPayment.getPaymentStatus() == PaymentStatus.DONE) {
+                return findPaymentByOrderId(request.getOrderNumber());
+            }
 
-        Map<String, Object> payload = Map.of(
-                "paymentKey", request.getPaymentKey(),
-                "orderId", request.getOrderNumber(),
-                "amount", request.getAmount()
-        );
+            // 2. Toss API 호출
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBasicAuth(secretKey, "");
+            headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<?> entity = new HttpEntity<>(payload, headers);
-        ResponseEntity<String> response = restTemplate.postForEntity(
-                "https://api.tosspayments.com/v1/payments/confirm",
-                entity,
-                String.class
-        );
+            Map<String, Object> payload = Map.of(
+                    "paymentKey", request.getPaymentKey(),
+                    "orderId", request.getOrderNumber(),
+                    "amount", request.getAmount()
+            );
 
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException("Toss 결제 승인 실패: " + response.getBody());
+            HttpEntity<?> entity = new HttpEntity<>(payload, headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                    "https://api.tosspayments.com/v1/payments/confirm",
+                    entity,
+                    String.class
+            );
+
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new RuntimeException("Toss 결제 승인 실패: " + response.getBody());
+            }
+
+            // 3. 결제 정보 저장
+            PaymentResponse paymentResponse = findPaymentByOrderId(request.getOrderNumber());
+            savePayment(paymentResponse);
+
+            // 4. 주문 상태 업데이트
+            orderServiceClient.updateOrderStatusToCompleted(request.getOrderNumber());
+
+            return paymentResponse;
+
+        } catch (Exception e) {
+            // 오류 발생 시 결제 상태 검증 및 복구
+            return handlePaymentError(request.getOrderNumber(), e);
         }
-
-        // 승인 성공 → 주문 상태 업데이트
-        orderServiceClient.updateOrderStatusToCompleted(request.getOrderNumber());
-
-        // 승인 성공 후 db 에 저장
-        PaymentResponse paymentResponse = findPaymentByOrderId(request.getOrderNumber());
-
-        savePayment(paymentResponse);
-
-        return paymentResponse;
     }
 
     // toss 의 결제 응답 dto -> PaymentResponse의 정보를 Payment에 저장
@@ -203,6 +216,27 @@ class PaymentServiceImpl implements PaymentService {
 
     private OffsetDateTime toKST(OffsetDateTime dateTime) {
         return dateTime.atZoneSameInstant(ZoneId.of("Asia/Seoul")).toOffsetDateTime();
+    }
+
+    // 결제 오류 처리 및 상태 동기화
+    private PaymentResponse handlePaymentError(String orderNumber, Exception originalException) {
+        try {
+            // Toss API로 실제 결제 상태 조회
+            PaymentResponse actualStatus = findPaymentByOrderId(orderNumber);
+
+            if ("DONE".equals(actualStatus.getStatus())) {
+                // Toss에서는 성공했지만 우리 시스템에서 오류 발생한 경우
+                savePayment(actualStatus);
+                orderServiceClient.updateOrderStatusToCompleted(orderNumber);
+                return actualStatus;
+            } else {
+                // 실제로 결제 실패한 경우
+                throw new RuntimeException("결제 실패: " + originalException.getMessage());
+            }
+        } catch (Exception e) {
+            // 상태 조회도 실패한 경우 - 수동 확인 필요
+            throw new RuntimeException("결제 상태 확인 실패 - 수동 확인 필요: " + orderNumber);
+        }
     }
 
 }

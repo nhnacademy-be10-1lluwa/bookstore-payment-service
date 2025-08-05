@@ -11,4 +11,5 @@ public class PaymentConfirmRequest {
     private String orderNumber;
     private String paymentKey;
     private int amount;
+    private String idempotencyKey;
 }
