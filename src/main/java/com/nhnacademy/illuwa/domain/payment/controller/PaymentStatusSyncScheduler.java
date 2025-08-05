@@ -1,5 +1,6 @@
 package com.nhnacademy.illuwa.domain.payment.controller;
 
+import com.nhnacademy.illuwa.client.OrderServiceClient;
 import com.nhnacademy.illuwa.domain.payment.dto.PaymentResponse;
 import com.nhnacademy.illuwa.domain.payment.entity.Payment;
 import com.nhnacademy.illuwa.domain.payment.entity.PaymentStatus;
@@ -20,6 +21,7 @@ public class PaymentStatusSyncScheduler {
 
     private final PaymentRepository paymentRepository;
     private final PaymentService paymentService;
+    private final OrderServiceClient orderServiceClient;
 
     @Scheduled(fixedDelay = 300000)
     public void syncPendingPayments() {
@@ -31,15 +33,19 @@ public class PaymentStatusSyncScheduler {
                 if (payment.getApproveAt().isBefore(LocalDateTime.now().minusMinutes(10))) {
                     PaymentResponse actualStatus = paymentService.findPaymentByOrderId(payment.getOrderNumber());
 
-                    // 상태가 다르면 동기화
-                    if (!payment.getPaymentStatus().toString().equals(actualStatus.getStatus())) {
-                        payment.setPaymentStatus(PaymentStatus.forValue(actualStatus.getStatus()));
+                    if("DONE".equals(actualStatus.getStatus())) {
+
+                        payment.setPaymentStatus(PaymentStatus.DONE);
                         paymentRepository.save(payment);
+
+                        // 주문 상태도 업데이트
+                        orderServiceClient.updateOrderStatusToCompleted(payment.getOrderNumber());
+
+                        log.info("결제 상태 동기화 완료: {}",  payment.getOrderNumber());
                     }
                 }
             } catch (Exception e) {
-                // 로그 기록 후 다음 결제 처리
-                log.error("결제 상태 동기화 실패: ", payment.getOrderNumber());
+                log.error("결제 상태 동기화 실패: ", payment.getOrderNumber(), e);
             }
         }
     }

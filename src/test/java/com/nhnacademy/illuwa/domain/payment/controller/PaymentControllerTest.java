@@ -61,7 +61,7 @@ class PaymentControllerTest {
     @DisplayName("api/payments/confirm")
     void confirmPaymentTest() throws Exception {
 
-        PaymentConfirmRequest request = new PaymentConfirmRequest("test-order-id", "test-payment-key", 1000, "test-idempotency-key");
+        PaymentConfirmRequest request = new PaymentConfirmRequest("test-order-id", "test-payment-key", 1000);
 
         PaymentResponse expectedResponse = createMockPaymentResponse(
                 request.getOrderNumber(),

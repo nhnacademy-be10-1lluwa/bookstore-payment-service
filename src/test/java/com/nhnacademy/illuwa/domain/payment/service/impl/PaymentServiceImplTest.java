@@ -91,7 +91,7 @@ public class PaymentServiceImplTest {
     @DisplayName("confirm: 결제 승인 성공 시 주문 상태 업데이트 및 DB 저장")
     void confirmTest_success() throws Exception {
         PaymentConfirmRequest confirmRequest = new PaymentConfirmRequest(
-                "order-id-confirm-test", "payment-key-confirm-test", 1500, "test-idempotency-key");
+                "order-id-confirm-test", "payment-key-confirm-test", 1500);
         String tossConfirmResponseJson = String.format(
                 "{\"status\": \"DONE\", \"orderId\": \"%s\", \"paymentKey\": \"%s\", \"totalAmount\": %d}",
                 confirmRequest.getOrderNumber(), confirmRequest.getPaymentKey(), confirmRequest.getAmount());
@@ -147,7 +147,7 @@ public class PaymentServiceImplTest {
     @DisplayName("confirm: 결제 승인 실패 시 RuntimeException 발생")
     void confirm_failure_tossApiError() {
         PaymentConfirmRequest confirmRequest = new PaymentConfirmRequest(
-                "order-id-fail", "payment-key-fail", 500, "test-idempotency-key");
+                "order-id-fail", "payment-key-fail", 500);
 
         ResponseEntity<String> tossErrorResponse = new ResponseEntity<>("Error from Toss", HttpStatus.BAD_REQUEST);
         when(restTemplate.postForEntity(
