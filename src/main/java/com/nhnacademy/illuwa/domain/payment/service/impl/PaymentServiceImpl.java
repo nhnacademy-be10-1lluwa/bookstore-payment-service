@@ -44,13 +44,13 @@ class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public PaymentResponse confirm(PaymentConfirmRequest request) {
-        try {
-            // 1. 이미 처리된 결제인지 확인 (멱등성 보장)
-            Payment existingPayment = paymentRepository.findByOrderNumber(request.getOrderNumber());
-            if (existingPayment != null && existingPayment.getPaymentStatus() == PaymentStatus.DONE) {
-                return findPaymentByOrderId(request.getOrderNumber());
-            }
+        // 1. 이미 처리된 결제인지 확인 (멱등성 보장)
+        Payment existingPayment = paymentRepository.findByOrderNumber(request.getOrderNumber());
+        if (existingPayment != null && existingPayment.getPaymentStatus() == PaymentStatus.DONE) {
+            return findPaymentByOrderId(request.getOrderNumber());
+        }
 
+        try {
             // 2. Toss API 호출
             HttpHeaders headers = new HttpHeaders();
             headers.setBasicAuth(secretKey, "");
@@ -238,5 +238,4 @@ class PaymentServiceImpl implements PaymentService {
             throw new RuntimeException("결제 상태 확인 실패 - 수동 확인 필요: " + orderNumber);
         }
     }
-
 }
