@@ -44,6 +44,13 @@ class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public PaymentResponse confirm(PaymentConfirmRequest request) {
+
+        Payment existingPayment = paymentRepository.findByOrderNumber(request.getOrderNumber());
+        if (existingPayment != null && existingPayment.getPaymentStatus() == PaymentStatus.DONE) {
+            // 이미 처리된 결제면 기존 결과 반환
+            return findPaymentByOrderId(request.getOrderNumber());
+        }
+
         // Toss API 호출
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(secretKey, "");
@@ -204,26 +211,5 @@ class PaymentServiceImpl implements PaymentService {
 
     private OffsetDateTime toKST(OffsetDateTime dateTime) {
         return dateTime.atZoneSameInstant(ZoneId.of("Asia/Seoul")).toOffsetDateTime();
-    }
-
-    // 결제 오류 처리 및 상태 동기화
-    private PaymentResponse handlePaymentError(String orderNumber, Exception originalException) {
-        try {
-            // Toss API로 실제 결제 상태 조회
-            PaymentResponse actualStatus = findPaymentByOrderId(orderNumber);
-
-            if ("DONE".equals(actualStatus.getStatus())) {
-                // Toss에서는 성공했지만 우리 시스템에서 오류 발생한 경우
-                savePayment(actualStatus);
-                orderServiceClient.updateOrderStatusToCompleted(orderNumber);
-                return actualStatus;
-            } else {
-                // 실제로 결제 실패한 경우
-                throw new RuntimeException("결제 실패: " + originalException.getMessage());
-            }
-        } catch (Exception e) {
-            // 상태 조회도 실패한 경우 - 수동 확인 필요
-            throw new RuntimeException("결제 상태 확인 실패 - 수동 확인 필요: " + orderNumber);
-        }
     }
 }
