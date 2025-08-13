@@ -12,10 +12,12 @@ import com.nhnacademy.illuwa.domain.payment.repository.CardInfoEntityRepository;
 import com.nhnacademy.illuwa.domain.payment.repository.PaymentRepository;
 import com.nhnacademy.illuwa.domain.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StopWatch;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
@@ -28,6 +30,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 class PaymentServiceImpl implements PaymentService {
@@ -44,14 +47,19 @@ class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public PaymentResponse confirm(PaymentConfirmRequest request) {
+        StopWatch sw = new StopWatch("confirm");
 
+        // 이미 처리된 결제 체크
+        sw.start("check-duplicate");
         Payment existingPayment = paymentRepository.findByOrderNumber(request.getOrderNumber());
+        sw.stop();
         if (existingPayment != null && existingPayment.getPaymentStatus() == PaymentStatus.DONE) {
             // 이미 처리된 결제면 기존 결과 반환
             return findPaymentByOrderId(request.getOrderNumber());
         }
 
         // Toss API 호출
+        sw.start("toss-confirm");
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(secretKey, "");
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -64,22 +72,28 @@ class PaymentServiceImpl implements PaymentService {
 
         HttpEntity<?> entity = new HttpEntity<>(payload, headers);
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "https://api.tosspayments.com/v1/payments/confirm",
-                entity,
-                String.class
+                "https://api.tosspayments.com/v1/payments/confirm", entity, String.class
         );
 
+        sw.stop();
+
         if (!response.getStatusCode().is2xxSuccessful()) {
+            log.info("[confirm] timing:\n{}", sw.prettyPrint());
             throw new RuntimeException("Toss 결제 승인 실패: " + response.getBody());
         }
 
         // 승인 성공 → 주문 상태 업데이트
+        sw.start("order-update-completed");
         orderServiceClient.updateOrderStatusToCompleted(request.getOrderNumber());
+        sw.stop();
 
         // 승인 성공 후 db 에 저장
+        sw.start("load-and-save");
         PaymentResponse paymentResponse = findPaymentByOrderId(request.getOrderNumber());
         savePayment(paymentResponse);
+        sw.stop();
 
+        log.info("[confirm] total={}ms detail=\n{}", sw.getTotalTimeMillis(), sw.prettyPrint());
         return paymentResponse;
     }
 
