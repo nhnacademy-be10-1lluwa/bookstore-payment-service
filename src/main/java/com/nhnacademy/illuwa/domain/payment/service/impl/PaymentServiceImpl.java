@@ -49,15 +49,6 @@ class PaymentServiceImpl implements PaymentService {
     public PaymentResponse confirm(PaymentConfirmRequest request) {
         StopWatch sw = new StopWatch("confirm");
 
-        // 이미 처리된 결제 체크
-        sw.start("check-duplicate");
-        Payment existingPayment = paymentRepository.findByOrderNumber(request.getOrderNumber());
-        sw.stop();
-        if (existingPayment != null && existingPayment.getPaymentStatus() == PaymentStatus.DONE) {
-            // 이미 처리된 결제면 기존 결과 반환
-            return findPaymentByOrderId(request.getOrderNumber());
-        }
-
         // Toss API 호출
         sw.start("toss-confirm");
         HttpHeaders headers = new HttpHeaders();
@@ -71,10 +62,9 @@ class PaymentServiceImpl implements PaymentService {
         );
 
         HttpEntity<?> entity = new HttpEntity<>(payload, headers);
-        ResponseEntity<String> response = restTemplate.postForEntity(
-                "https://api.tosspayments.com/v1/payments/confirm", entity, String.class
-        );
-
+//        String url = "http://localhost:8089/v1/payments/confirm";
+        String url = "https://api.tosspayments.com/v1/payments/confirm";
+        ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
         sw.stop();
 
         if (!response.getStatusCode().is2xxSuccessful()) {
@@ -130,6 +120,8 @@ class PaymentServiceImpl implements PaymentService {
         URI uri = null;
         try {
             uri = new URI("https://api.tosspayments.com/v1/payments/orders/" + orderId);
+//            uri = new URI("http://localhost:8089/v1/payments/orders/" + orderId);
+
         } catch (URISyntaxException e) {
             throw new InvalidPaymentUriException("잘못된 URI 정보입니다.");
         }
@@ -224,6 +216,9 @@ class PaymentServiceImpl implements PaymentService {
 
 
     private OffsetDateTime toKST(OffsetDateTime dateTime) {
+        if(dateTime == null) {
+            return null;
+        }
         return dateTime.atZoneSameInstant(ZoneId.of("Asia/Seoul")).toOffsetDateTime();
     }
 }
