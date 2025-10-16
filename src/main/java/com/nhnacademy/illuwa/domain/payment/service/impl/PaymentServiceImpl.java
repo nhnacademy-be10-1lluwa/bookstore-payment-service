@@ -62,8 +62,8 @@ class PaymentServiceImpl implements PaymentService {
         );
 
         HttpEntity<?> entity = new HttpEntity<>(payload, headers);
-//        String url = "http://localhost:8089/v1/payments/confirm";
-        String url = "https://api.tosspayments.com/v1/payments/confirm";
+        String url = "http://localhost:8089/v1/payments/confirm";
+//        String url = "https://api.tosspayments.com/v1/payments/confirm";
         ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
         sw.stop();
 
@@ -119,8 +119,8 @@ class PaymentServiceImpl implements PaymentService {
         // 결제 조회 url 구현
         URI uri = null;
         try {
-            uri = new URI("https://api.tosspayments.com/v1/payments/orders/" + orderId);
-//            uri = new URI("http://localhost:8089/v1/payments/orders/" + orderId);
+//            uri = new URI("https://api.tosspayments.com/v1/payments/orders/" + orderId);
+            uri = new URI("http://localhost:8089/v1/payments/orders/" + orderId);
 
         } catch (URISyntaxException e) {
             throw new InvalidPaymentUriException("잘못된 URI 정보입니다.");
